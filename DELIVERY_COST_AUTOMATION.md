@@ -40,8 +40,8 @@ pricing config (the `pharmacies` table) — no customer data.
 
 ## Pricing logic (per row)
 
-1. Only `Task_Type = Delivery` rows are priced. `Pick-up` rows are kept in the
-   sheet with a blank `Cost`.
+1. Only `Task_Type = Delivery` rows are priced (for both `Completed` and
+   `Failed` statuses). `Pick-up` rows are kept in the sheet with a blank `Cost`.
 2. Resolve the delivery city by parsing `Customer_Address`. Normalized
    (lowercase/trim) lookup in the pharmacy's `city_rates` → flat rate.
 3. If the city has no flat rate (city not resolved, or not a key in
@@ -52,7 +52,10 @@ pricing config (the `pharmacies` table) — no customer data.
 
 ## Row inclusion
 
-- **Only `Completed` rows are kept** (Delivery priced, Pick-up blank).
+- **`Completed` and `Failed` rows are kept.** For both statuses, Delivery rows
+  are priced with the same city flat-rate logic and Pick-up rows stay blank —
+  so failed pick-ups and failed deliveries appear in the per-pharmacy sheets
+  (each row's `Task_Status` column shows whether it was Completed or Failed).
 - Every other status (`Cancelled`, `Unassigned`, `Assigned`, blank, …) is
   discarded. The summary reports the discarded total and a per-status
   breakdown (`summary.discarded.byStatus`).
