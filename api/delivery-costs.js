@@ -87,6 +87,12 @@ const COMPUTED = {
 // for now — these are meant to be computed later.)
 const NEEDS_CALC = "Need to Calculate";
 
+// Task_Status values that are kept in the output. Both Completed and Failed
+// pick-ups/deliveries are included; Failed deliveries are priced with the same
+// city flat-rate logic as Completed deliveries. Every other status
+// (Cancelled, Unassigned, Assigned, blank, …) is discarded.
+const KEPT_STATUSES = new Set(["completed", "failed"]);
+
 function parseNumber(v) {
   if (v === undefined || v === null || String(v).trim() === "" || String(v).trim() === "-") return null;
   const n = Number(String(v).replace(/,/g, "").trim());
@@ -250,7 +256,7 @@ export function processRows(rows, pharmacies) {
   const summary = {
     totalRows: rows.length,
     kept: 0,
-    // Only Completed rows are kept; everything else is discarded, tallied by status.
+    // Completed and Failed rows are kept; everything else is discarded, tallied by status.
     discarded: { total: 0, byStatus: {} },
     unmatched: { count: 0, orderIds: {} },
     needsCalculation: { count: 0, sample: [] },
@@ -261,8 +267,8 @@ export function processRows(rows, pharmacies) {
   for (const row of rows) {
     const statusKey = String(row.Task_Status ?? "").trim().toLowerCase();
 
-    // --- Row inclusion: keep only Completed rows; discard everything else. ---
-    if (statusKey !== "completed") {
+    // --- Row inclusion: keep Completed and Failed rows; discard everything else. ---
+    if (!KEPT_STATUSES.has(statusKey)) {
       summary.discarded.total++;
       const label = statusKey || "(blank)";
       summary.discarded.byStatus[label] = (summary.discarded.byStatus[label] || 0) + 1;
@@ -284,7 +290,8 @@ export function processRows(rows, pharmacies) {
       buckets.set(pharmacy.id, { pharmacy, rows: [], cityStats: new Map() });
     const bucket = buckets.get(pharmacy.id);
 
-    // Completed: only Delivery rows are priced (Pick-up stays blank).
+    // Delivery rows (Completed or Failed) are priced with the city flat-rate
+    // logic; Pick-up rows stay blank regardless of status.
     let cost = null;
     const isDelivery = String(row.Task_Type ?? "").trim().toLowerCase() === "delivery";
     if (isDelivery) {

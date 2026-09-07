@@ -233,7 +233,7 @@
                     .sort((a, b) => b[1] - a[1])
                     .map(([s, n]) => `${escapeHtml(s)}: ${n}`).join(', ');
                 flags.push(`<div class="rounded-xl border border-cyan-500/10 bg-slate-900/40 px-4 py-3 text-sm text-gray-400">
-                    <strong class="text-gray-200">Discarded ${summary.discarded.total}</strong> (only <code class="text-gray-300">Completed</code> rows are kept)
+                    <strong class="text-gray-200">Discarded ${summary.discarded.total}</strong> (only <code class="text-gray-300">Completed</code> and <code class="text-gray-300">Failed</code> rows are kept)
                     <div class="mt-1 text-gray-500 text-xs">${byStatus}</div></div>`);
             }
             if (summary.unmatched.count > 0) {
